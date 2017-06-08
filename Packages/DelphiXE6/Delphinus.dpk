@@ -144,7 +144,9 @@ contains
   DN.Setup.Dependency.Processor.Intf in '..\..\DN.Setup.Dependency.Processor.Intf.pas',
   DN.Setup.Dependency.Processor in '..\..\DN.Setup.Dependency.Processor.pas',
   DN.Setup.Dependency.Resolver.Install in '..\..\DN.Setup.Dependency.Resolver.Install.pas',
-  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas';
+  DN.Setup.Dependency.Resolver.UnInstall in '..\..\DN.Setup.Dependency.Resolver.UnInstall.pas',
+  DN.PackageProvider.Bitbucket in '..\..\DN.PackageProvider.Bitbucket.pas',
+  DN.Package.Bitbucket in '..\..\DN.Package.Bitbucket.pas';
 
 end.
 

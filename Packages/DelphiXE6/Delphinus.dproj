@@ -226,6 +226,8 @@
         <DCCReference Include="..\..\DN.Setup.Dependency.Processor.pas"/>
         <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.Install.pas"/>
         <DCCReference Include="..\..\DN.Setup.Dependency.Resolver.UnInstall.pas"/>
+        <DCCReference Include="..\..\DN.PackageProvider.Bitbucket.pas"/>
+        <DCCReference Include="..\..\DN.Package.Bitbucket.pas"/>
         <RcCompile Include="..\DelphinusImages.rc">
             <Form>DelphinusImages.res</Form>
         </RcCompile>
