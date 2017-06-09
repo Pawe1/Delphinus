@@ -10,6 +10,7 @@ unit DN.Setup.Core;
 interface
 
 uses
+  Generics.Collections,
   DN.Types,
   DN.Setup.Intf,
   DN.Installer.Intf,
@@ -25,7 +26,7 @@ type
     FComponentDirectory: string;
     FOnMessage: TMessageEvent;
     FOnProgress: TDNProgressEvent;
-    FProvider: IDNPackageProvider;
+    FProviders: TList<IDNPackageProvider>;
     function GetComponentDirectory: string;
     procedure SetComponentDirectory(const Value: string);
     function GetOnMessage: TMessageEvent;
@@ -52,7 +53,7 @@ type
     procedure RegisterProgressHandler(const AInterface: IInterface; AHandler: TDNProgressEvent = nil);
     procedure UnregisterProgressHandler(const AInterface: IInterface);
   public
-    constructor Create(const APackageProvider: IDNPackageProvider);
+    constructor Create(const APackageProviders: TList<IDNPackageProvider>);
     destructor Destroy; override;
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; virtual; abstract;
     function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; virtual;
@@ -102,10 +103,10 @@ begin
   Result := Trim(Result);
 end;
 
-constructor TDNSetupCore.Create(const APackageProvider: IDNPackageProvider);
+constructor TDNSetupCore.Create(const APackageProviders: TList<IDNPackageProvider>);
 begin
   inherited Create();
-  FProvider := APackageProvider;
+  FProviders := APackageProviders;
   FProgress := TDNProgress.Create();
   FProgress.OnProgress := DoProgress;
 end;
@@ -133,7 +134,7 @@ var
   LTempDir: string;
   LVersion: string;
 begin
-  RegisterProgressHandler(FProvider, HandleProviderProgress);
+  RegisterProgressHandler(FProviders[0], HandleProviderProgress);
   try
     ReportInfo('Downloading ' + APackage.Name);
     LTempDir := GetSetupTempDir();
@@ -144,13 +145,13 @@ begin
       LVersion := '';
 
     ReportInfo('Version: ' + LVersion);
-    Result := FProvider.Download(APackage, LVersion, LTempDir, AContentDirectory);
+    Result := FProviders[0].Download(APackage, LVersion, LTempDir, AContentDirectory);
     if not Result then
     begin
       ReportError('failed to download');
     end;
   finally
-    UnregisterProgressHandler(FProvider);
+    UnregisterProgressHandler(FProviders[0]);
   end;
 end;
 

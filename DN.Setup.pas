@@ -10,6 +10,7 @@ unit DN.Setup;
 interface
 
 uses
+  Generics.Collections,
   DN.Types,
   DN.Setup.Core,
   DN.Installer.Intf,
@@ -27,7 +28,7 @@ type
   protected
     function GetHasPendingChanges: Boolean; override;
   public
-    constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProvider: IDNPackageProvider);
+    constructor Create(const AInstaller: IDNInstaller; const AUninstaller: IDNUninstaller; const APackageProviders: TList<IDNPackageProvider>);
     destructor Destroy; override;
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; override;
     function Uninstall(const APackage: IDNPackage): Boolean; override;
@@ -48,9 +49,9 @@ uses
 
 constructor TDNSetup.Create(const AInstaller: IDNInstaller;
   const AUninstaller: IDNUninstaller;
-  const APackageProvider: IDNPackageProvider);
+  const APackageProviders: TList<IDNPackageProvider>);
 begin
-  inherited Create(APackageProvider);
+  inherited Create(APackageProviders);
   FInstaller := AInstaller;
   if Assigned(FInstaller) then
     FInstaller.OnMessage := DoMessage;

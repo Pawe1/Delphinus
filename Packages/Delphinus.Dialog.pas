@@ -70,7 +70,7 @@ type
   private
     { Private declarations }
     FOverView: TPackageOverView;
-    FPackageProvider: IDNPackageProvider;
+    FPackageProviders: TList<IDNPackageProvider>;
     FInstalledPackageProvider: IDNPackageProvider;
     FPackages: TList<IDNPackage>;
     FInstalledPackages: TList<IDNPackage>;
@@ -99,7 +99,7 @@ type
     function GetUpdateVersion(const APackage: IDNPackage): TDNVersion;
     function GetActiveOverView: TPackageOverView;
     procedure ShowDetail(const APackage: IDNPackage);
-    procedure RecreatePackageProvider();
+    procedure RecreatePackageProviders();
     function CreateSetup: IDNSetup;
     function CreateDependencyProcessor: IDNSetupDependencyProcessor;
     function CreateInstallDependencyResolver: IDNSetupDependencyResolver;
@@ -199,7 +199,7 @@ begin
     if LDialog.ShowModal = mrOk then
     begin
       LDialog.StoreSettings(FSettings);
-      RecreatePackageProvider();
+      RecreatePackageProviders();
     end;
   finally
     LDialog.Free;
@@ -232,6 +232,7 @@ begin
   inherited;
   FSettings := TDNSettings.Create();
   FPackages := TList<IDNPackage>.Create();
+  FPackageProviders := TList<IDNPackageProvider>.Create();
   FInstalledPackages := TList<IDNPackage>.Create();
   FUpdatePackages := TList<IDNPackage>.Create();
   FFileService := TDNFileService.Create((BorlandIDEServices as IOTAServices).GetBaseRegistryKey);
@@ -261,7 +262,7 @@ begin
   FCategoryFilteView.OnCategoryChanged := HandleCategoryChanged;
   FCategoryFilteView.Parent := Self;
 
-  RecreatePackageProvider();
+  RecreatePackageProviders();
   FInstalledPackageProvider := TDNInstalledPackageProvider.Create(GetComponentDirectory());
   RefreshInstalledPackages();
   dlgSelectInstallFile.Filter := CInstallFileFilter;
@@ -324,7 +325,7 @@ begin
   LBPLService := TDNToolsApiBPLService.Create();
   LInstaller := TDNIDEInstaller.Create(LCompiler, FEnvironmentOptionsService, LBPLService, LVariableResolverFactory, LExpertService);
   LUninstaller := TDNIDEUninstaller.Create(FEnvironmentOptionsService, LBPLService, LExpertService, FFileService);
-  Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProvider);
+  Result := TDNSetup.Create(LInstaller, LUninstaller, FPackageProviders);
   Result.ComponentDirectory := GetComponentDirectory();
 end;
 
@@ -344,7 +345,7 @@ begin
   FPackages.Free;
   FInstalledPackages.Free;
   FUpdatePackages.Free;
-  FPackageProvider := nil;
+  FPackageProviders.Free;
   FInstalledPackageProvider := nil;
   FSettings := nil;
   FDummyPic.Free;
@@ -593,14 +594,15 @@ begin
   FDetailView.DummyPic := FDummyPic;
 end;
 
-procedure TDelphinusDialog.RecreatePackageProvider;
+procedure TDelphinusDialog.RecreatePackageProviders;
 var
   LClient: IDNHttpClient;
 begin
+  FPackageProviders.Clear();
   LClient := TDNWinHttpClient.Create();
   if FSettings.OAuthToken <> '' then
     LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
-  FPackageProvider := TDNGitHubPackageProvider.Create(LClient);
+  FPackageProviders.Add(TDNGitHubPackageProvider.Create(LClient));
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
@@ -608,7 +610,7 @@ var
   LInstalledPackage: IDNPackage;
   LState: IDNPackageProviderState;
 begin
-  if Supports(FPackageProvider, IDNPackageProviderState, LState) then
+  if Supports(FPackageProviders[0], IDNPackageProviderState, LState) then
   begin
     if LState.State <> psOk then
       ShowWarning(LState.LastError)
@@ -647,12 +649,12 @@ begin
     begin
       try
         try
-          if Supports(FPackageProvider, IDNProgress, LProgress) then
+          if Supports(FPackageProviders[0], IDNProgress, LProgress) then
             LProgress.OnProgress := HandleAsyncProgress;
-          if FPackageProvider.Reload() then
+          if FPackageProviders[0].Reload() then
           begin
             FPackages.Clear;
-            FPackages.AddRange(FPackageProvider.Packages);
+            FPackages.AddRange(FPackageProviders[0].Packages);
           end;
         finally
           if Assigned(LProgress) then
