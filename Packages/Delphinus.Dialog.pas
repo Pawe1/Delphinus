@@ -32,7 +32,7 @@ uses
   DN.EnvironmentOptions.Intf,
   ExtCtrls,
   StdCtrls,
-  Registry;
+  Registry, System.Actions, System.ImageList;
 
 type
   TDelphinusDialog = class(TForm)
@@ -134,6 +134,7 @@ uses
   DN.Types,
   DN.Package.Finder.Intf,
   DN.Package.Finder,
+  DN.PackageProvider.Bitbucket,
   DN.PackageProvider.GitHub,
   DN.PackageProvider.Installed,
   DN.PackageProvider.State.Intf,
@@ -603,19 +604,24 @@ begin
   if FSettings.OAuthToken <> '' then
     LClient.Authentication := Format(CGithubOAuthAuthentication, [FSettings.OAuthToken]);
   FPackageProviders.Add(TDNGitHubPackageProvider.Create(LClient));
+  FPackageProviders.Add(TDNBitbucketPackageProvider.Create(LClient));
 end;
 
 procedure TDelphinusDialog.RefreshInstalledPackages;
 var
+  LC: Integer;
   LInstalledPackage: IDNPackage;
   LState: IDNPackageProviderState;
 begin
-  if Supports(FPackageProviders[0], IDNPackageProviderState, LState) then
+  for LC := 0 to FPackageProviders.Count - 1 do
   begin
-    if LState.State <> psOk then
-      ShowWarning(LState.LastError)
-    else
-      pnlWarning.Visible := False;
+    if Supports(FPackageProviders[LC], IDNPackageProviderState, LState) then
+    begin
+      if LState.State <> psOk then
+        ShowWarning(LState.LastError)
+      else
+        pnlWarning.Visible := False;
+    end;
   end;
   if FInstalledPackageProvider.Reload() then
   begin
@@ -644,17 +650,21 @@ begin
   TThread.CreateAnonymousThread(
     procedure
     var
+      LC: Integer;
       LProgress: IDNProgress;
       LMessage: string;
     begin
       try
         try
-          if Supports(FPackageProviders[0], IDNProgress, LProgress) then
-            LProgress.OnProgress := HandleAsyncProgress;
-          if FPackageProviders[0].Reload() then
+          for LC := 0 to FPackageProviders.Count - 1 do
           begin
-            FPackages.Clear;
-            FPackages.AddRange(FPackageProviders[0].Packages);
+            if Supports(FPackageProviders[LC], IDNProgress, LProgress) then
+              LProgress.OnProgress := HandleAsyncProgress;
+            if FPackageProviders[LC].Reload() then
+            begin
+              FPackages.Clear;
+              FPackages.AddRange(FPackageProviders[LC].Packages);
+            end;
           end;
         finally
           if Assigned(LProgress) then

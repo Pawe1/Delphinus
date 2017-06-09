@@ -9,7 +9,7 @@ uses
   SysUtils,
   SyncObjs,
   Generics.Collections,
-  DN.Package.Github,
+  DN.Package.Bitbucket,
   DN.Package.Intf,
   DN.PackageProvider,
   DN.JSonFile.CacheInfo,
@@ -42,7 +42,7 @@ type
     procedure CheckRateLimit;
   protected
     FClient: IDNHttpClient;
-    function GetLicense(const APackage: TDNGitHubPackage): string;
+    function GetLicense(const APackage: TDNBitbucketPackage): string;
     function GetPushDateFile: string;
     function GetRepoList(out ARepos: TJSONArray): Boolean; virtual;
     procedure SavePushDates;
@@ -58,7 +58,7 @@ type
   end;
 
 const
-  CGithubOAuthAuthentication = 'token %s';
+  CBitbucketOAuthAuthentication = 'token %s';
 
 implementation
 
@@ -79,7 +79,7 @@ uses
   DN.Progress,
   DN.Environment,
   DN.Graphics.Loader,
-  DN.PackageProvider.GitHub.State;
+  DN.PackageProvider.Bitbucket.State;
 
 const
   CBitbucketFileContent = 'https://api.bitbucket.org/2.0/repositories/%s/%s/downloads  /contents/%s?ref=%s';//user/repo filepath/branch
@@ -147,7 +147,7 @@ end;
 function TDNBitbucketPackageProvider.CreatePackageWithMetaInfo(AItem: TJSONObject;
   out APackage: IDNPackage): Boolean;
 var
-  LPackage: TDNGitHubPackage;
+  LPackage: TDNBitbucketPackage;
   LName, LAuthor, LDefaultBranch, LReleases: string;
   LFullName, LPushDate, LOldPushDate: string;
   LHeadInfo: TInfoFile;
@@ -174,8 +174,8 @@ begin
   try
     if GetInfoFile(LAuthor, LName, LDefaultBranch, LHeadInfo) and not FExistingIDs.ContainsKey(LHeadInfo.ID) then
     begin
-      FExistingIDs.Add(LHeadInfo.ID, 0);
-      LPackage := TDNGitHubPackage.Create();
+      FExistingIDs.Add({LHeadInfo.ID} tguid.NewGuid, 0);
+      LPackage := TDNBitbucketPackage.Create();
       LPackage.OnGetLicense := GetLicense;
       LPackage.Description := AItem.GetValue('description').Value;
       LPackage.DownloadLoaction := AItem.GetValue('archive_url').Value;
@@ -243,7 +243,7 @@ begin
   FProgress.SetTasks(['Downloading']);
   LArchiveFile := TPath.Combine(AFolder, 'Package.zip');
   FClient.OnProgress := HandleDownloadProgress;
-  Result := FClient.Download(APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNGitHubPackage).DefaultBranch), LArchiveFile) = HTTPErrorOk;
+  Result := FClient.Download(APackage.DownloadLoaction + IfThen(AVersion <> '', AVersion, (APackage as TDNBitbucketPackage).DefaultBranch), LArchiveFile) = HTTPErrorOk;
   FClient.OnProgress := nil;
   if Result then
   begin
@@ -308,7 +308,7 @@ function TDNBitbucketPackageProvider.GetFileStream(const AAuthor, ARepository,
 begin
   FClient.Accept := CMediaTypeRaw;
   try
-//    Result := FClient.Get(Format(CGithubFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AFile) = HTTPErrorOk;
+//    Result := FClient.Get(Format(CBitbucketFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AFile) = HTTPErrorOk;
     if not Result then
       CheckRateLimit();
   finally
@@ -321,7 +321,7 @@ function TDNBitbucketPackageProvider.GetFileText(const AAuthor, ARepository,
 begin
   FClient.Accept := CMediaTypeRaw;
   try
-//    Result := FClient.GetText(Format(CGithubFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AText) = HTTPErrorOk;
+//    Result := FClient.GetText(Format(CBitbucketFileContent, [AAuthor, ARepository, AFilePath, AVersion]), AText) = HTTPErrorOk;
     if not Result then
       CheckRateLimit();
   finally
@@ -346,7 +346,7 @@ begin
 end;
 
 function TDNBitbucketPackageProvider.GetLicense(
-  const APackage: TDNGitHubPackage): string;
+  const APackage: TDNBitbucketPackage): string;
 begin
   Result := 'No Licensefile has been provided.' + sLineBreak + 'Contact the Packageauthor to fix this issue by using the report-button.';
   if (APackage.LicenseFile <> '') then
@@ -372,7 +372,7 @@ end;
 function TDNBitbucketPackageProvider.GetReleaseText(const AAuthor,
   ARepository: string; out AReleases: string): Boolean;
 begin
-//  Result := FClient.GetText(Format(CGithubRepoReleases, [AAuthor, ARepository]), AReleases) = HTTPErrorOk;
+//  Result := FClient.GetText(Format(CBitbucketRepoReleases, [AAuthor, ARepository]), AReleases) = HTTPErrorOk;
   if not Result then
     CheckRateLimit();
 end;
