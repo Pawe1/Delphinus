@@ -43,7 +43,6 @@ type
     procedure ReportError(const AError: string);
     function DownloadPackage(const APackage: IDNPackage; const AVersion: IDNPackageVersion; out AContentDirectory: string): Boolean;
     function GetInstallDirectoryForPackage(const APackage: IDNPackage): string; virtual;
-    function GetInstallDirectoryForDirectory(const ADirectory: string): string; virtual;
     function GetHasPendingChanges: Boolean; virtual;
     function ExtendInfoFile(const APackage: IDNPackage; const AVersion: IDNPackageVersion; const AInstallDirectory: string): Boolean;
     function GetSetupTempDir: string;
@@ -57,7 +56,7 @@ type
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; virtual; abstract;
     function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; virtual;
     function Uninstall(const APackage: IDNPackage): Boolean; virtual; abstract;
-    function InstallDirectory(const ADirectory: string): Boolean; virtual; abstract;
+    function InstallDirectory(const APackage: IDNPackage; const ADirectory: string): Boolean; virtual; abstract;
     function UninstallDirectory(const ADirectory: string): Boolean; virtual; abstract;
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
@@ -191,12 +190,6 @@ end;
 function TDNSetupCore.GetHasPendingChanges: Boolean;
 begin
   Result := False;
-end;
-
-function TDNSetupCore.GetInstallDirectoryForDirectory(
-  const ADirectory: string): string;
-begin
-  Result := TPath.Combine(FComponentDirectory, ExtractFileName(ExcludeTrailingPathDelimiter(ADirectory)));
 end;
 
 function TDNSetupCore.GetInstallDirectoryForPackage(const APackage: IDNPackage): string;

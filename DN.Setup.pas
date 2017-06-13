@@ -31,7 +31,7 @@ type
     destructor Destroy; override;
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean; override;
     function Uninstall(const APackage: IDNPackage): Boolean; override;
-    function InstallDirectory(const ADirectory: string): Boolean; override;
+    function InstallDirectory(const APackage: IDNPackage; const ADirectory: string): Boolean; override;
     function UninstallDirectory(const ADirectory: string): Boolean; override;
   end;
 
@@ -101,12 +101,12 @@ begin
     ReportError('Installation failed');
 end;
 
-function TDNSetup.InstallDirectory(const ADirectory: string): Boolean;
+function TDNSetup.InstallDirectory(const APackage: IDNPackage; const ADirectory: string): Boolean;
 var
   LInstallDirectory: string;
 begin
   FProgress.SetTasks(['Installing']);
-  LInstallDirectory := GetInstallDirectoryForDirectory(ADirectory);
+  LInstallDirectory := GetInstallDirectoryForPackage(APackage);
   Result := FInstaller.Install(ADirectory, LInstallDirectory);
   FProgress.Completed();
   if Result then

@@ -201,7 +201,7 @@ begin
         begin
           case FMode of
             sdmInstall: FSetup.Install(FPackage, GetSelectedVersion());
-            sdmInstallDirectory: FSetup.InstallDirectory(FDirectoryToInstall);
+            sdmInstallDirectory: FSetup.InstallDirectory(FPackage, FDirectoryToInstall);
             sdmUninstall: FSetup.Uninstall(FPackage);
             sdmUninstallDirectory: FSetup.UninstallDirectory(FInstalledComponentDirectory);
             sdmUpdate: FSetup.Update(FPackage, GetSelectedVersion());

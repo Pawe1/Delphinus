@@ -28,7 +28,7 @@ type
     function Install(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
     function Update(const APackage: IDNPackage; const AVersion: IDNPackageVersion): Boolean;
     function Uninstall(const APackage: IDNPackage): Boolean;
-    function InstallDirectory(const ADirectory: string): Boolean;
+    function InstallDirectory(const APackage: IDNPackage; const ADirectory: string): Boolean;
     function UninstallDirectory(const ADirectory: string): Boolean;
     property ComponentDirectory: string read GetComponentDirectory write SetComponentDirectory;
     property OnMessage: TMessageEvent read GetOnMessage write SetOnMessage;
